@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "utils": [
+                "./src/utils"
+            ],
+            "server": [
+                "./src/server/"
+            ],
+            "db": [
+                "./src/dal"
+            ],
+            "logger": [
+                "./src/utils/logger"
+            ],
+        }
+    },
+    "exclude": [
+        "node_modules",
+        "lib"
+    ]
+}
