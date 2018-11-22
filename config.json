@@ -1,15 +1,8 @@
 {
-   "HTTP_PORT": 9010,
-   "FILES_PATH": "C:/Source/backup_file.csv",
-   "DB": {
-      "ENDPOINTS": [
-         "127.0.0.1:9042"
-      ],
-      "KEYSPACE": "smart_trade_recordings"
-   },
-   "LOG": {
-      "LOG_LEVEL": "INFO",
-      "LOG_MAX_FILES": 10,
-      "LOG_MAX_FILE_SIZE": 5120
-   }
+  "ordersTopic" : "orders",
+  "notificationsTopic" : "notifications",
+  "balancesTopic" : "balances",
+  "kafkaZookeeperPort" : "2181",
+  "kafkaZookeeperUrl" : "localhost",
+  "credentialsFilePath" : "C:/credentials/credentials.json"
 }

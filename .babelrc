@@ -20,7 +20,11 @@
                     "utils": "./src/utils",
                     "server": "./src/server",
                     "db": "./src/dal",
-                    "logger": "./src/utils/logger"
+                    "logger": "./src/utils/logger",
+                    "moduleInfo": "./src/utils/moduleInfo",
+                    "status": "./src/utils/status",
+                    "eventQueue": "./src/utils/eventQueue",
+                    "credentialsManager": "./src/utils/credentialsManager"
                 }
             }
         ]

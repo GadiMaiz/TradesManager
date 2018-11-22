@@ -1,54 +1,42 @@
+// import createError from 'http-errors';
+import express from 'express';
+import traderRouter from '../../routes/traderRoutes';
 import logger from 'logger';
+import OrderExecuter from './modules/orderExecuter';
 
 class Server {
-  constructor() {
+  constructor(params) {
+    let orderExecuter = new OrderExecuter(params);
+    const  getEventQueue = require('eventQueue');
+    getEventQueue(params, (data) => orderExecuter.execute(data));
 
-  }
+    this.server = express();
+    this.server.use(express.json());
 
-  async start(cb) {
+    this.server.use('/', traderRouter);
 
-    if (!this.config || !this.config.HTTP_PORT)
-      throw new Error('RecordingService: Invalid config');
-
-    const app = express();
-
-    // assign middlewares
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: true }));
-
-    try {
-      // const ramlMiddleware = await osprey.loadFile(path.join(__dirname, '/routes/raml/api.raml'));
-
-      // app.use(ramlMiddleware);
-    }
-    catch (err) {
-      log.error(err);
-    }
-
-    // routing
-    app.use('/api', api);
-    app.use(errorHandler);
-
-    const http = require('http');
-
-    this.service = http.createServer(app).listen(this.config.HTTP_PORT, null, () => {
-      const port = this.service.address().port;
-      log.info(`Recording service is listening at: localhost:${port}.`);
-
-      if (cb) cb(null, this);
+    // catch 404 and forward to error handler
+    this.server.use(function(req, res, next) {
+      next();
     });
 
-  }
+    // error handler
+    this.server.use(function(err, req, res, next) {
+      // set locals, only providing error in development
+      logger.error(err.message);
+      res.locals.message = err.message;
+      // res.locals.error =  this.server.get('env') === 'development' ? err : {};
 
-  stop() {
-    logger.info('server is going down...');
+      // render the error page
+      res.status(err.status || 500);
+      res.end(err.message);
+    });
   }
-
-  getClientNum() {
-    return 5;
+  getServer() {
+    return this.server;
   }
 }
 
-const server = new Server();
+export default Server;
 
-export default server;
+

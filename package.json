@@ -4,7 +4,7 @@
   "description": "Node.js project-template for the smart-trader team.",
   "main": "lib/index.js",
   "scripts": {
-    "start": "nodemon --inspect  ./src/index.js --exec babel-node",
+    "start": "nodemon --inspect=9230  ./src/index.js --exec babel-node",
     "build": "babel src -d lib",
     "run:prod": "node .",
     "test": "nyc --temp-directory coverage --reporter=html --reporter=text --exclude **/*.spec.js mocha --require babel-register  ./src/**/*.spec.js --require babel-core/register --coverage",
@@ -31,14 +31,14 @@
     "babel-core": "^6.26.3",
     "babel-plugin-module-resolver": "^3.1.1",
     "babel-preset-env": "^1.7.0",
-    "chai": "^4.1.2",
-    "eslint": "^5.4.0",
+    "chai": "^4.2.0",
+    "eslint": "^5.9.0",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-jsx-a11y": "^6.1.2",
     "eslint-plugin-react": "^7.11.1",
     "mocha": "^5.2.0",
-    "nodemon": "^1.18.3",
+    "nodemon": "^1.18.6",
     "nyc": "^12.0.2"
   },
   "engines": {
@@ -47,8 +47,12 @@
   "dependencies": {
     "cassandra-driver": "^3.5.0",
     "csv-write-stream": "^2.0.0",
-    "node-config-module": "git+https://github.com/bitmain-israel/node-config-module",
+    "express": "^4.16.4",
+    "kafka-node": "^3.0.1",
+    "node-config-module": "git+https://github.com/bitmain-israel/node-config-module.git",
+    "node-rest-client": "^3.1.0",
     "node-schedule": "^1.3.0",
-    "winston": "^3.0.0"
+    "smart-trader-common": "git+https://github.com/bitmain-israel/smart-trader-common.git",
+    "winston": "^3.1.0"
   }
 }
