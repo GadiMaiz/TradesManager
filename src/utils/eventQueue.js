@@ -56,7 +56,8 @@ class EventQueue {
 
     // order requests consumer initilization
 
-    this.topics = [{ topic: params.ordersTopic, partition: 0 }];
+    // this.topics = [{ topic: params.ordersTopic, partition: 0 }];
+    this.topics = [{ topic: params.ordersTopic, partition: 0 }, { topic: params.depositTopic, partition: 0 }];
     this.options = { autoCommit: true, fetchMaxWaitMs: 1000, fetchMaxBytes: 1024 * 1024 };
     this.consumer = new kafka.Consumer(this.client, this.topics, this.options);
     this.offset = new kafka.Offset(this.client);

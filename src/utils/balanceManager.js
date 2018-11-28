@@ -17,7 +17,7 @@ class BalanceManager {
   }
 
   async updateAllBalance(balancesList, account) {
-    logger.debug('updateAllBalances');
+    logger.debug('updateAllBalances %o', balancesList);
     if (!this.balances[account]) {
       this.balances[account] = {};
     }

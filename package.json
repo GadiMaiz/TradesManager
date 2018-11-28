@@ -48,6 +48,7 @@
     "cassandra-driver": "^3.5.0",
     "csv-write-stream": "^2.0.0",
     "express": "^4.16.4",
+    "is-reachable": "^2.4.0",
     "kafka-node": "^3.0.1",
     "node-config-module": "git+https://github.com/bitmain-israel/node-config-module.git",
     "node-rest-client": "^3.1.0",

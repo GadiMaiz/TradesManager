@@ -1,8 +1,9 @@
 
 export const TraderStatus = {
   finished :         'Finished',
-  cancelled :         'Cancelled',
+  cancelled :        'Cancelled',
   makeOrder:         'Make Order',
-  makeOrderFinished: 'Make Order Finished',
-  makeOrderExecuted: 'Make Order Executed'
+  takeOrder:         'Timed Take Order',
+  makeOrderExecuted: 'Make Order Executed',
+  makeOrderFinished: 'Make Order Finished'
 };

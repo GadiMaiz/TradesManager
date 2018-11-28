@@ -3,12 +3,14 @@ import express from 'express';
 import traderRouter from '../../routes/traderRoutes';
 import logger from 'logger';
 import OrderExecuter from './modules/orderExecuter';
+import getNotificationManager from '../utils/notificationManager';
 
 class Server {
   constructor(params) {
     let orderExecuter = new OrderExecuter(params);
     const  getEventQueue = require('eventQueue');
     getEventQueue(params, (data) => orderExecuter.execute(data));
+    getNotificationManager(orderExecuter);
 
     this.server = express();
     this.server.use(express.json());
