@@ -55,18 +55,24 @@ class OrderExecuter {
   }
 
   orderWasFinished(params) {
-    console.log('XXXXXXXXXXXXXXXXXXXXXXXXXX3 finished,  %o',params);
-    this.traderClient.getTimedOrderStatus(params.account, params.internalOrderId ,(data) => {
-      if (this.orders[params.internalOrderId].currentSizeToTrade === this.orders[params.internalOrderId].sizeLeftToDeposit === 0) {
-        logger.debug(`order ${params.internalOrderId} was finished`);
-        delete this.orders[params.internalOrderId];
+    console.log(`FINISHED? currentSizeToTrade, 0, sizeLeftToDeposit`);
+    console.log(`FINISHED? ${this.orders[params.internalOrderId].currentSizeToTrade} == 0 == ${this.orders[params.internalOrderId].sizeLeftToDeposit}`);
+    if (this.orders[params.internalOrderId].currentSizeToTrade == 0 &&  this.orders[params.internalOrderId].sizeLeftToDeposit == 0) {
+      logger.debug(`order ${params.internalOrderId} was finished`);
+      let i = 0;
+      let retVal = { size: 0, price:0 };
+      for (i = 0; i < this.orders[params.internalOrderId].trades.length; ++i) {
+        const size = this.orders[params.internalOrderId].trades[i].size;
+        retVal.size = Number((retVal.size + size).toPrecision(6));
+        retVal.price = Number((retVal.price + (this.orders[params.internalOrderId].trades[i].price * size)).toPrecision(6));
       }
-      else
-      {
-        this.orders[params.internalOrderId]['currentSizeToTrade'] -= data.timed_order_done_size;
-      }
+      retVal.price = Number((retVal.price / retVal.size).toPrecision(6));
+      delete this.orders[params.internalOrderId];
+      return retVal;
 
-    });
+    }
+    return null;
+
 
   }
 
@@ -184,31 +190,28 @@ class OrderExecuter {
     }
 
     if (params.size) {
-      this.orders[params.requestId]['currentSizeToTrade'] +=  params.size;
-      this.orders[params.requestId]['sizeLeftToDeposit'] = (this.orders[params.requestId]['sizeLeftToDeposit'] - params.size).toPrecision(8);
+      this.orders[params.requestId]['currentSizeToTrade'] =  Number((this.orders[params.requestId]['currentSizeToTrade'] + params.size).toPrecision(6));
+      this.orders[params.requestId]['sizeLeftToDeposit'] = Number((this.orders[params.requestId]['sizeLeftToDeposit'] - params.size).toPrecision(6));
       if (! this.orders[params.requestId]['maxExchangeSizes'][params.exchange])
       {
         this.orders[params.requestId]['maxExchangeSizes'][params.exchange]  = 0;
       }
-      this.orders[params.requestId]['maxExchangeSizes'][params.exchange]  +=  Number(params.size);
+      this.orders[params.requestId]['maxExchangeSizes'][params.exchange]  = Number((this.orders[params.requestId]['maxExchangeSizes'][params.exchange] + params.size).toPrecision(6));
     }
 
     logger.info(`order ${params.requestId} was updated, canceling all related requests and executing new ones`);
 
     if (order.activeOrder) {
-      this.traderClient.getTimedOrderStatus(order.account, params.requestId ,(data) => {
-        // this.orders[params.requestId]['currentSizeToTrade'] -= data.timed_order_done_size;
-        this.traderClient.sendCancelRequest(order.account, params.requestId, (data) => {
-          params['exchange'] = exchange;
-          if (data.cancel_time_order_result === 'False') {
-            this.generateOrder(params);
-          }
-          else{
-            this.killList[params.requestId] = params;
-          }
-        });
-
+      this.traderClient.sendCancelRequest(order.account, params.requestId, (data) => {
+        params['exchange'] = exchange;
+        if (data.cancel_time_order_result === 'False') {
+          this.generateOrder(params);
+        }
+        else{
+          this.killList[params.requestId] = params;
+        }
       });
+
     }
     else{
       this.generateOrder(params);
@@ -360,13 +363,13 @@ class OrderExecuter {
       return;
     }
     this.traderClient.sendOrderRequest(params, (data) => {
-
       if (data.order_status == 'False') {
+        logger.error('timed request failed , %o', data);
         getEventQueue().sendNotification(Notifications.Error,
           {
             requestId: params.requestId,
             errorCode: Status.Error,
-            errorMessage: 'Timed make request failed',
+            errorMessage: data.execution_message,
             exchanges: params.exchanges,
             currencyFrom: pair[0],
             currencyTo: pair[1]
@@ -428,12 +431,18 @@ class OrderExecuter {
   }
 
   orderWasExecuted(params) {
-    this.orders[params.internalOrderId]['maxExchangeSizes'][params.exchange]  -=  params.size;
-    this.orders[params.internalOrderId]['currentSizeToTrade'] -= params.size;
+    if (!this.orders[params.internalOrderId]['trades']) {
+      this.orders[params.internalOrderId]['trades'] = [];
+    }
+    this.orders[params.internalOrderId]['trades'].push( { 'size': params.size , 'price': params.price } );
+
+    this.orders[params.internalOrderId]['maxExchangeSizes'][params.exchange] = Number((this.orders[params.internalOrderId]['maxExchangeSizes'][params.exchange] - params.size).toPrecision(6));
+    this.orders[params.internalOrderId]['currentSizeToTrade'] = Number((this.orders[params.internalOrderId]['currentSizeToTrade'] - params.size).toPrecision(6));
+    logger.info(`currentSizeToTrade ${this.orders[params.internalOrderId]['currentSizeToTrade']}`);
+    if(this.orders[params.internalOrderId]['currentSizeToTrade'] === 0) {
+      this.orders[params.internalOrderId].activeOrder = false;
+    }
   }
-
-
-
 }
 
 

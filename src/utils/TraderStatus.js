@@ -5,5 +5,6 @@ export const TraderStatus = {
   makeOrder:         'Make Order',
   takeOrder:         'Timed Take Order',
   makeOrderExecuted: 'Make Order Executed',
-  makeOrderFinished: 'Make Order Finished'
+  makeOrderFinished: 'Make Order Finished',
+  timedTakeFinished:  'Timed Take Finished'
 };

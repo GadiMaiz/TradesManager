@@ -17,7 +17,6 @@ class TraderNotificationManager {
   notify(params) {
     switch(params.status) {
       case TraderStatus.finished:
-        // console.log('NOTIFY = %o', params);
         this.handleFinished(params);
         break;
       case TraderStatus.cancelled:
@@ -25,11 +24,9 @@ class TraderNotificationManager {
         break;
       case  TraderStatus.makeOrder:
       case  TraderStatus.takeOrder:
-        // console.log('NOTIFY = %o', params);
         this.handleNewOrder(params);
         break;
       case  TraderStatus.makeOrderExecuted:
-        console.log('NOTIFY = %o', params);
         this.handleMakeOrderExecuted(params);
         break;
 
@@ -37,14 +34,36 @@ class TraderNotificationManager {
   }
 
   handleFinished(params) {
+    logger.info('GADI handleFinished -> %o', params);
     if (!this.orderExecuter.orderWasCancelled(params)) {
-      if (params.parentOrderId === -1) {
+      this.orderExecuter.orderWasExecuted(params);
+
+      getEventQueue().sendNotification(Notifications.Update,
+        {
+          requestId     : params.internalOrderId,
+          exchanges     : [params.exchange.toLowerCase()],
+          size          : params.size,
+          price         : params.price,
+          ask           : params.ask,
+          bid           : params.bid,
+          currencyFrom  : params.currencyFromAvailable,
+          currencyTo    : params.currencyToAvailable,
+          sendingModule : Module.name,
+          exchangeOrderId : params.exchangeOrderId,
+          userId          : params.userId,
+          actionType      : 'take'
+        });
+
+      const retVal = this.orderExecuter.orderWasFinished(params);
+
+      if (retVal) {
+        logger.info('GADI handleFinished ---->  if (retVal), retVal = %o', retVal);
         getEventQueue().sendNotification(Notifications.Finished,
           {
             requestId     : params.internalOrderId,
             exchanges     : [params.exchange.toLowerCase()],
-            size          : params.size,
-            price         : params.price,
+            size          : retVal.size,
+            price         : retVal.price,
             ask           : params.ask,
             bid           : params.bid,
             currencyFrom  : params.currencyFromAvailable,
@@ -53,30 +72,12 @@ class TraderNotificationManager {
             exchangeOrderId : params.exchangeOrderId,
             userId          : params.userId
           });
-
         logger.debug('order id %s was finished', params.internalOrderId );
-        this.orderExecuter.orderWasFinished(params);
       }
+      else {
+        logger.info('GADI handleFinished ---->  if (!retVal)');
 
-      else{
-        console.log('XXXXXXXXXXXXXXXXXXXXXXX - 2 params = %o', params);
-        this.orderExecuter.orderWasExecuted(params);
-        getEventQueue().sendNotification(Notifications.Update,
-          {
-            requestId     : params.internalOrderId,
-            exchanges     : [params.exchange.toLowerCase()],
-            size          : params.size,
-            price         : params.price,
-            ask           : params.ask,
-            bid           : params.bid,
-            currencyFrom  : params.currencyFromAvailable,
-            currencyTo    : params.currencyToAvailable,
-            sendingModule : Module.name,
-            exchangeOrderId : params.exchangeOrderId,
-            userId          : params.userId
-          });
       }
-      logger.debug('order id %s was finished, size = %o, price = %o', params.internalOrderId,params.size, params.price);
     }
   }
 
@@ -84,7 +85,6 @@ class TraderNotificationManager {
     if (!this.orderExecuter.orderWasCancelled(params)) {
       if (params.parentOrderId === -1 || this.openOrders[params.tradeOrderId]) {
 
-        console.log(JSON.stringify(params));
         getEventQueue().sendNotification(Notifications.Cancelled,
           {
             requestId     : params.internalOrderId,
@@ -105,7 +105,20 @@ class TraderNotificationManager {
       }
     }
     else{
-      // console.log('NOTIFY = %o', params);
+      getEventQueue().sendNotification(Notifications.Cancelled,
+        {
+          requestId     : params.internalOrderId,
+          exchanges     : [params.exchange.toLowerCase()],
+          size          : params.size,
+          price         : params.price,
+          ask           : params.ask,
+          bid           : params.bid,
+          currencyFrom  : params.currencyFromAvailable,
+          currencyTo    : params.currencyToAvailable,
+          sendingModule : Module.name,
+          exchangeOrderId : params.exchangeOrderId,
+          userId          : params.userId
+        });
     }
   }
 
@@ -130,7 +143,7 @@ class TraderNotificationManager {
   }
 
   handleMakeOrderExecuted(params) {
-    console.log('XXXXXXXXXXXXXXXXXXXXXXX - 1 prarams = %o', params);
+    logger.info('GADI handleMakeOrderExecuted -> %o', params);
     this.orderExecuter.orderWasExecuted(params);
     getEventQueue().sendNotification(Notifications.Update,
       {
@@ -144,7 +157,8 @@ class TraderNotificationManager {
         currencyTo    : params.currencyToAvailable,
         sendingModule : Module.name,
         exchangeOrderId : params.exchangeOrderId,
-        userId          : params.userId
+        userId          : params.userId,
+        actionType      : 'take'
       // errorCode     : err.statusCode,
       // errorMessage  : err.message
       });
