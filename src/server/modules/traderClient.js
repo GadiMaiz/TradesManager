@@ -36,7 +36,8 @@ class TraderClient {
         'externalOrderId'   : params.requestId,
         'userId'            : params.account,
         'durationSec'       : params.durationSec,
-        'maxOrderSize'      : params.maxOrderSize },
+        'maxOrderSize'      : params.maxOrderSize,
+        'maxExchangeSizes'  : params.maxExchangeSizes },
       headers: { 'Content-Type': 'application/json' }
     };
     let url = `${this.url}/sendOrder?account=${params.account}`;

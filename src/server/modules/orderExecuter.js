@@ -55,8 +55,7 @@ class OrderExecuter {
   }
 
   orderWasFinished(params) {
-    console.log(`FINISHED? currentSizeToTrade, 0, sizeLeftToDeposit`);
-    console.log(`FINISHED? ${this.orders[params.internalOrderId].currentSizeToTrade} == 0 == ${this.orders[params.internalOrderId].sizeLeftToDeposit}`);
+    logger.debug(`currentSizeToTrade = ${this.orders[params.internalOrderId].currentSizeToTrade} , size still needs to be deposited =  ${this.orders[params.internalOrderId].sizeLeftToDeposit}`);
     if (this.orders[params.internalOrderId].currentSizeToTrade == 0 &&  this.orders[params.internalOrderId].sizeLeftToDeposit == 0) {
       logger.debug(`order ${params.internalOrderId} was finished`);
       let i = 0;
@@ -67,6 +66,7 @@ class OrderExecuter {
         retVal.price = Number((retVal.price + (this.orders[params.internalOrderId].trades[i].price * size)).toPrecision(6));
       }
       retVal.price = Number((retVal.price / retVal.size).toPrecision(6));
+      logger.info('trade %s, was finished, size traded = %o, average price = ', params.internalOrderId, retVal.size,  retVal.price);
       delete this.orders[params.internalOrderId];
       return retVal;
 
@@ -88,8 +88,8 @@ class OrderExecuter {
     const parameters = JSON.parse(order.value);
 
     if (order.topic === 'deposit') {
-      this.update(order.key, parameters);
       console.log('deposit');
+      this.update(order.key, parameters);
     }
     else{
       getEventQueue().sendNotification(Notifications.ReceivedFromEventQueue,
@@ -179,6 +179,11 @@ class OrderExecuter {
 
 
   update(exchange, params) {
+    logger.debug('update request was received with parameters = %o', params);
+    getEventQueue().sendNotification(Notifications.depositRequestReceived, {
+      requestId: params.requestId,
+      exchanges: [params.exchange.toLowerCase()],
+      size : params.size });
 
     const order = this.orders[params.requestId];
     if (!order) {
@@ -221,7 +226,7 @@ class OrderExecuter {
   orderWasCancelled(params) {
     if (this.killList[params.internalOrderId]) {
       if  (this.orders[params.internalOrderId]['tradeOrderId'] === params.tradeOrderId) {
-
+        logger.debug('order id %o, was cancelled , generating new request',params.internalOrderId);
         let order = this.killList[params.internalOrderId];
         this.generateOrder(order);
         delete this.killList[params.internalOrderId];
@@ -243,7 +248,6 @@ class OrderExecuter {
       order['durationSec'] = 1;
     }
     order['maxOrderSize'] = Math.max((order.currentSizeToTrade < 0.2 ? 0.02 : 0.2), order.currentSizeToTrade / 100);
-
 
     if (order.typeOfTrade === 'make') {
       logger.info('about to send make order request, order details %o', order);
@@ -276,6 +280,11 @@ class OrderExecuter {
         requestId              : params.requestId
       };
 
+      let i = 0;
+      for (i = 0; i < this.orders[params.requestId].exchanges.length; ++i) {
+        this.orders[params.requestId].maxExchangeSizes[this.orders[params.requestId].exchanges[i]] = 0;
+      }
+
       const timeToChange = params.durationSec * this.thresholdPercent * 10;
       logger.debug(`action type will be changed in ${timeToChange}`);
       setTimeout(() => { this.updateActionType(params.requestId) ; },timeToChange );
@@ -287,7 +296,6 @@ class OrderExecuter {
 
   updateActionType(requestId) {
     logger.info(`order ${requestId} changed from make to take` );
-    // here we should find the order
 
     this.orders[requestId]['typeOfTrade'] = 'take';
     if (this.orders[requestId].activeOrder) {
@@ -318,7 +326,6 @@ class OrderExecuter {
       logger.error('some of the input parameters are missing (size, price, exchanges, requestId, assetPair)');
       return;
     }
-    let retVal = null;
     params['durationSec'] = 0;
     params['maxOrderSize'] = 0;
     this.traderClient.sendOrderRequest(params, (data) => {
@@ -348,7 +355,6 @@ class OrderExecuter {
     let tradedPair = params.assetPair.split('-');
 
     let pair = this.balanceManager.getBalance(tradedPair, params.account);
-    console.log(params.size ,price ,params.exchanges,params.requestId,params.assetPair ,params.durationSec);
     if (!params.size || !price || !params.exchanges || !params.requestId || !params.assetPair || !params.durationSec) {
       getEventQueue().sendNotification(Notifications.Error,
         {

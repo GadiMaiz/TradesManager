@@ -38,7 +38,7 @@
     "eslint-plugin-jsx-a11y": "^6.1.2",
     "eslint-plugin-react": "^7.11.1",
     "mocha": "^5.2.0",
-    "nodemon": "^1.18.6",
+    "nodemon": "^1.18.7",
     "nyc": "^12.0.2"
   },
   "engines": {
@@ -52,7 +52,7 @@
     "kafka-node": "^3.0.1",
     "node-config-module": "git+https://github.com/bitmain-israel/node-config-module.git",
     "node-rest-client": "^3.1.0",
-    "node-schedule": "^1.3.0",
+    "node-schedule": "^1.3.1",
     "smart-trader-common": "git+https://github.com/bitmain-israel/smart-trader-common.git",
     "winston": "^3.1.0"
   }

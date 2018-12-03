@@ -129,7 +129,7 @@ class TraderNotificationManager {
     getEventQueue().sendNotification(Notifications.ReceivedOnTrader,
       {
         requestId     : params.internalOrderId,
-        exchanges     : [params.exchange.toLowerCase()],
+        exchanges     : params.exchange.toLowerCase().replace(/\s/g, '').split(','),
         size          : params.size,
         price         : params.price,
         ask           : params.ask,
@@ -158,7 +158,7 @@ class TraderNotificationManager {
         sendingModule : Module.name,
         exchangeOrderId : params.exchangeOrderId,
         userId          : params.userId,
-        actionType      : 'take'
+        actionType      : 'make'
       // errorCode     : err.statusCode,
       // errorMessage  : err.message
       });
